@@ -33,13 +33,7 @@ if [ $? != 0 ]; then
   sed -i -e "/targetPort: {{ .Values.jaeger.ui.port }}/a\        nodePort: 31070\n    type: {{ .Values.jaeger.service.type }}" $TRACING_DIR/service.yaml
 fi
 
-# install helm command if needed
-which helm > /dev/null 2>&1
-if [ $? != 0 ]; then
-  curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | sh
-fi
-
 kubectl create namespace istio-system
-helm template $NAME/install/kubernetes/helm/istio --name istio -f helm_values.yaml --namespace istio-system > istio-install.yaml
+helm template $NAME/install/kubernetes/helm/istio --name istio -f helm_values_istio.yaml --namespace istio-system > istio-install.yaml
 kubectl apply -f istio-install.yaml
 #rm -f istio-install.yaml
