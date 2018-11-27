@@ -1,7 +1,7 @@
 ## GitLab Runner Image
 ## ref: https://hub.docker.com/r/gitlab/gitlab-runner/tags/
 ##
-image: gitlab/gitlab-runner:v11.1.0
+image: gitlab/gitlab-runner:alpine-v11.5.0
 
 ## Specify a imagePullPolicy
 ## 'Always' if imageTag is 'latest', else set to 'IfNotPresent'
@@ -9,17 +9,23 @@ image: gitlab/gitlab-runner:v11.1.0
 ##
 imagePullPolicy: IfNotPresent
 
+## Default container image to use for initcontainer
+init:
+  image: busybox
+  tag: latest
+
 ## The GitLab Server URL (with protocol) that want to register the runner against
 ## ref: https://docs.gitlab.com/runner/commands/README.html#gitlab-runner-register
 ##
 # gitlabUrl: http://gitlab.your-domain.com/
-gitlabUrl: http://<your-server-ip>:30000
+gitlabUrl: <gitlab-url>
 
 ## The Registration Token for adding new Runners to the GitLab Server. This must
 ## be retreived from your GitLab Instance.
 ## ref: https://docs.gitlab.com/ce/ci/runners/README.html#creating-and-registering-a-runner
 ##
-runnerRegistrationToken: ""
+# runnerRegistrationToken: ""
+runnerRegistrationToken: "<registration-token>"
 
 ## The Runner Token for adding new Runners to the GitLab Server. This must
 ## be retreived from your GitLab Instance. It is token of already registered runner.
@@ -46,12 +52,17 @@ unregisterRunners: true
 ## Configure the maximum number of concurrent jobs
 ## ref: https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-global-section
 ##
-concurrent: 2
+concurrent: 10
 
 ## Defines in seconds how often to check GitLab for a new builds
 ## ref: https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-global-section
 ##
 checkInterval: 30
+
+## Configure GitLab Runner's logging level. Available values are: debug, info, warn, error, fatal, panic
+## ref: https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-global-section
+##
+# logLevel:
 
 ## For RBAC support:
 rbac:
@@ -65,12 +76,17 @@ rbac:
   ##
   # serviceAccountName: default
 
+## Configure integrated Prometheus metrics exporter
+## ref: https://docs.gitlab.com/runner/monitoring/#configuration-of-the-metrics-http-server
+metrics:
+  enabled: true
+
 ## Configuration for the Pods that that the runner launches for each new job
 ##
 runners:
   ## Default container image to use for builds when none is specified
   ##
-  image: busybox
+  image: ubuntu:16.04
 
   ## Specify one or more imagePullSecrets
   ##
@@ -82,12 +98,22 @@ runners:
   ##
   # imagePullPolicy: ""
 
+  ## Specify whether the runner should be locked to a specific project: true, false. Defaults to true.
+  ##
+  # locked: true
+  
+  ## Specify the tags associated with the runner. Comma-separated list of tags.
+  ##
+  ## ref: https://docs.gitlab.com/ce/ci/runners/#using-tags
+  ##
+  # tags: ""
+
   ## Run all containers with the privileged flag enabled
   ## This will allow the docker:dind image to run if you need to run Docker
   ## commands. Please read the docs before turning this on:
   ## ref: https://docs.gitlab.com/runner/executors/kubernetes.html#using-docker-dind
   ##
-  privileged: true
+  privileged: false
 
   ## The name of the secret containing runnerToken and runnerRegistrationToken
   # secret: gitlab-runner
@@ -99,15 +125,15 @@ runners:
   ## Distributed runners caching
   ## ref: https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/configuration/autoscale.md#distributed-runners-caching
   ##
-  ## Create a secret 's3access' containing 'accessKey' & 'secretKey'
+  ## Create a secret 's3access' containing 'accesskey' & 'secretkey'
   ## ref: https://aws.amazon.com/blogs/security/wheres-my-secret-access-key/
   ##
   ## $ kubectl create secret generic s3access --\
-  ##   --from-literal=accessKey="YourAccessKey" \
-  ##   --from-literal=secretKey="YourSecretKey"
+  ##   --from-literal=accesskey="YourAccessKey" \
+  ##   --from-literal=secretkey="YourSecretKey"
   ## ref: https://kubernetes.io/docs/concepts/configuration/secret/
   ##
-  cache:
+  cache: {}
   # cacheType: s3
     # s3ServerAddress: s3.amazonaws.com
     # s3BucketName:
@@ -139,6 +165,7 @@ runners:
     # memoryLimit: 256Mi
     # cpuRequests: 100m
     # memoryRequests: 128Mi
+    # image: gitlab/gitlab-runner-helper:x86_64-latest
 
   ## Service Account to be used for runners
   ##
@@ -158,4 +185,13 @@ resources: {}
   # requests:
   #   memory: 128Mi
   #   cpu: 100m
+
+## Configure environment variables that will be present when the registration command runs
+## This provides further control over the registration process and the config.toml file
+## ref: `gitlab-runner register --help`
+## ref: https://docs.gitlab.com/runner/configuration/advanced-configuration.html
+##
+# envVars:
+#   - name: RUNNER_EXECUTOR
+#     value: kubernetes
 
