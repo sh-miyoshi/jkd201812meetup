@@ -10,17 +10,67 @@ proj_ops_token=""
 
 
 tmp=$(mktemp)
-sed -e 's/<namespace>/projfrontend/g' template/gitlab-user.yaml > $tmp
+
+#--------------------------------------
+# ProjFrontend
+#--------------------------------------
+name="projfrontend"
+sed -e "s/<namespace>/$name/g" template/gitlab-user.yaml > $tmp
 kubectl apply -f $tmp
 kubectl create secret docker-registry gitlab \
     --docker-username="$gitlabUser" \
     --docker-password="$gitlabPassword" \
     --docker-email="$gitlabEMail" \
     --docker-server="$gitlabUrl" \
-    -n projfrontend
+    -n $name
 
 sed "s/<gitlab-url>/$gitlabUrl/g" template/helm_values_gitlab-runner.yaml > $tmp
 sed -i "s/<registration-token>/$proj_frontend_token/g" $tmp
-helm install --name projfrontend-runner -n projfrontend -f $tmp gitlab/gitlab-runner
+helm install --name $name-runner -n $name -f $tmp gitlab/gitlab-runner
+
+
+#--------------------------------------
+# ProjBackend
+#--------------------------------------
+name="projbackend"
+sed -e "s/<namespace>/$name/g" template/gitlab-user.yaml > $tmp
+kubectl apply -f $tmp
+kubectl create secret docker-registry gitlab \
+    --docker-username="$gitlabUser" \
+    --docker-password="$gitlabPassword" \
+    --docker-email="$gitlabEMail" \
+    --docker-server="$gitlabUrl" \
+    -n $name
+
+sed "s/<gitlab-url>/$gitlabUrl/g" template/helm_values_gitlab-runner.yaml > $tmp
+sed -i "s/<registration-token>/$proj_backend_token/g" $tmp
+helm install --name $name-runner -n $name -f $tmp gitlab/gitlab-runner
+
+#--------------------------------------
+# ProjOps(staging and production)
+#--------------------------------------
+name="staging"
+sed -e "s/<namespace>/$name/g" template/gitlab-user.yaml > $tmp
+kubectl apply -f $tmp
+kubectl create secret docker-registry gitlab \
+    --docker-username="$gitlabUser" \
+    --docker-password="$gitlabPassword" \
+    --docker-email="$gitlabEMail" \
+    --docker-server="$gitlabUrl" \
+    -n $name
+
+name="production"
+sed -e "s/<namespace>/$name/g" template/gitlab-user.yaml > $tmp
+kubectl apply -f $tmp
+kubectl create secret docker-registry gitlab \
+    --docker-username="$gitlabUser" \
+    --docker-password="$gitlabPassword" \
+    --docker-email="$gitlabEMail" \
+    --docker-server="$gitlabUrl" \
+    -n $name
+
+sed "s/<gitlab-url>/$gitlabUrl/g" template/helm_values_gitlab-runner.yaml > $tmp
+sed -i "s/<registration-token>/$proj_ops_token/g" $tmp
+helm install --name projops-runner -n $name -f $tmp gitlab/gitlab-runner
 
 rm -rf $tmp
