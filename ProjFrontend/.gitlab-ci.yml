@@ -1,0 +1,72 @@
+variables:
+  DOCKER_HOST: tcp://localhost:2375
+  DOCKER_DRIVER: overlay2
+  APP_NAME: sample-frontend
+  APP_VERSION: $CI_PROJECT_ID.$CI_PIPELINE_ID # for Continuous Delivery
+
+stages:
+  - build
+  - test
+  - review
+
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - name: docker:dind
+      entrypoint:
+        - dockerd-entrypoint.sh
+      command:
+        - --insecure-registry=$CI_REGISTRY
+  before_script:
+    - docker info
+    - apk update
+    - apk add make
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+  script:
+    - make build
+    - make ci_push
+  only:
+    - branches
+
+unit_test:
+  stage: test
+  image: busybox
+  script:
+    - echo 'unit testing...'
+  only:
+    - branches
+  except:
+    - master
+
+deploy_review_app:
+  stage: review
+  image: lachlanevenson/k8s-kubectl
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+    on_stop: cleanup_review_app
+  allow_failure: false
+  before_script:
+    - kubectl version --short
+  script:
+    - sh create-k8s-deploy.sh $APP_NAME $APP_VERSION $CI_COMMIT_REF_NAME.$KUBE_DEPLOY_HOST 
+    - kubectl apply -f deploy.yaml
+  only:
+    - branches
+  except:
+    - master
+
+cleanup_review_app:
+  stage: review
+  image: lachlanevenson/k8s-kubectl
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+    action: stop
+  script:
+    - sh create-k8s-deploy.sh $APP_NAME $APP_VERSION $CI_COMMIT_REF_NAME.$KUBE_DEPLOY_HOST
+    - kubectl delete -f deploy.yaml --ignore-not-found=true
+  when: manual
+  only:
+    - branches
+  except:
+    - master
