@@ -26,8 +26,7 @@ kubectl create secret docker-registry gitlab \
 
 sed "s/<gitlab-url>/$gitlabUrl/g" template/helm_values_gitlab-runner.yaml > $tmp
 sed -i "s/<registration-token>/$proj_frontend_token/g" $tmp
-helm install --name $name-runner -n $name -f $tmp gitlab/gitlab-runner
-
+helm install --name $name-runner --namespace $name -f $tmp gitlab/gitlab-runner
 
 #--------------------------------------
 # ProjBackend
@@ -44,7 +43,7 @@ kubectl create secret docker-registry gitlab \
 
 sed "s/<gitlab-url>/$gitlabUrl/g" template/helm_values_gitlab-runner.yaml > $tmp
 sed -i "s/<registration-token>/$proj_backend_token/g" $tmp
-helm install --name $name-runner -n $name -f $tmp gitlab/gitlab-runner
+helm install --name $name-runner --namespace $name -f $tmp gitlab/gitlab-runner
 
 #--------------------------------------
 # ProjOps(staging and production)
@@ -71,6 +70,6 @@ kubectl create secret docker-registry gitlab \
 
 sed "s/<gitlab-url>/$gitlabUrl/g" template/helm_values_gitlab-runner.yaml > $tmp
 sed -i "s/<registration-token>/$proj_ops_token/g" $tmp
-helm install --name projops-runner -n $name -f $tmp gitlab/gitlab-runner
+helm install --name projops-runner --namespace $name -f $tmp gitlab/gitlab-runner
 
 rm -rf $tmp
