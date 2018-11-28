@@ -8,7 +8,12 @@
   ./install-istio.sh
 
 3. gitlabの構築
-  kubectl apply -f gitlab.yaml
+  docker run -d -p 80:80 --name gitlab gitlab/gitlab-ce:latest
+  各Prjに外部からアクセスできるURLに変更
+    docker exec -it gitlab bash
+    echo "external_url 'http://<your-server-ip>'" >> /etc/gitlab/gitlab.rb
+    gitlab-ctl reconfigure
+    exit
   ブラウザからhttp://<your-server-ip>:30000にアクセス
   rootユーザ用のパスワードを設定し、ログイン
   (※必要であれば各ユーザを作成してください)
@@ -36,7 +41,6 @@
 
 6. ソースコードを同期
   ProjFrontendの場合(※ProjBackendとProjOpsも同様に行う)
-  ※注意点: gitのリポジトリのURLはWeb UI上にあるものではなく、アクセス可能なパス(http://<your-server-ip>:30000)を指定してください
     cd /path/to/jkd201812meetup/ProjFrontend/
     git init
     git add -A
