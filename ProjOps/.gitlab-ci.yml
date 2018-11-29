@@ -1,0 +1,39 @@
+variables:
+  DEPLOY_APP_VERSION: "1.0"
+
+stages:
+  - staging_deploy
+  - ops_test
+  - canary_release
+  - production_deploy
+  - roll_back
+
+staging_deploy:
+  state: staging_deploy
+  image: smiyoshi/istioctl
+  script:
+    - echo "istioctl kube-inject -f ... > ..."
+    - echo "kubectl apply -f ... --kubeconfig=..."
+test_service_abort:
+  state: ops_test
+  image: lachlanevenson/k8s-kubectl
+  script:
+    - echo "kubectl apply -f apiserver_abort.yaml"
+    - echo "waiting manual test ok"
+canary_release_80_20:
+  state: canary_release
+  image: lachlanevenson/k8s-kubectl
+  script:
+    - echo "kubectl apply -f canary_frontend_80_20.yaml"
+production_deploy:
+  state: production_deploy
+  image: smiyoshi/istioctl
+  script:
+    - echo "if success to canary release, deploy to production"
+    - echo "istioctl kube-inject -f ... > ..."
+    - echo "kubectl apply -f ... --kubeconfig=..."
+roll_back:
+  state: roll_back
+  image: lachlanevenson/k8s-kubectl
+  script:
+    - echo "if failed to canary release, roll back to prev version"
