@@ -1,6 +1,6 @@
 #!/bin/bash
 
-gitlabUrl="http:\/\/<your-server-ip>:30000"
+gitlabUrl="http:\/\/<your-server-ip>"
 gitlabUser="root"
 gitlabPassword="mysecurepassword"
 gitlabEMail="admin@example.com"
