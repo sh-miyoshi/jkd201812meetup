@@ -18,10 +18,14 @@ build:
         - dockerd-entrypoint.sh
       command:
         - --insecure-registry=$CI_REGISTRY
+  variables:
+    DOCKER_IMAGE_NAME: $CI_REGISTRY/$CI_COMMIT_REF_NAME/$APP_NAME
+    DOCKER_IMAGE_VERSION: $APP_VERSION
   before_script:
-    - docker info
     - apk update
     - apk add make
+    - docker info
+    - export # for debug
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
   script:
     - make build
@@ -49,8 +53,8 @@ deploy_review_app:
   before_script:
     - kubectl version --short
   script:
-    - sh create-k8s-deploy.sh $APP_NAME $APP_VERSION $CI_COMMIT_REF_NAME.$KUBE_DEPLOY_HOST 
-    - kubectl apply -f deploy.yaml
+    - sh create-k8s-deploy.sh $APP_NAME $APP_VERSION
+    - kubectl apply -f k8s-deploy.yaml
   only:
     - branches
   except:
@@ -63,8 +67,8 @@ cleanup_review_app:
     name: review/$CI_COMMIT_REF_NAME
     action: stop
   script:
-    - sh create-k8s-deploy.sh $APP_NAME $APP_VERSION $CI_COMMIT_REF_NAME.$KUBE_DEPLOY_HOST
-    - kubectl delete -f deploy.yaml --ignore-not-found=true
+    - sh create-k8s-deploy.sh $APP_NAME $APP_VERSION
+    - kubectl delete -f k8s-deploy.yaml --ignore-not-found=true
   when: manual
   only:
     - branches

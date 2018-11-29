@@ -1,3 +1,14 @@
+#!/bin/bash
+
+if [ $# != 2 ]; then
+  echo "Usage: $0 <imageName> <appVersion>"
+  exit 1
+fi
+
+name=$1
+version=$2
+
+cat << EOF > k8s-deploy.yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -14,7 +25,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: docker.io/smiyoshi/sectest-frontend:latest
+        image: ${name}:${version}
         ports:
           - containerPort: 4567
         env:
@@ -39,3 +50,5 @@ spec:
     nodePort: 30010
   selector:
     app: frontend
+
+EOF
