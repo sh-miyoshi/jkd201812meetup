@@ -3,11 +3,14 @@
 1. kubernetes clusterの作成
   略
 
-2. Istioのインストール
+2. Helmのインストール
+  ./install-helm.sh
+
+3. Istioのインストール
   helm_values_istio.yamlを編集(任意)
   ./install-istio.sh
 
-3. gitlabの構築
+4. gitlabの構築
   docker run -d -p 80:80 --name gitlab gitlab/gitlab-ce:latest
   各Prjに外部からアクセスできるURLに変更
     docker exec -it gitlab bash
@@ -18,7 +21,7 @@
   rootユーザ用のパスワードを設定し、ログイン
   (※必要であれば各ユーザを作成してください)
 
-4. 各Projectの作成(ブラウザ上から操作)
+5. 各Projectの作成(ブラウザ上から操作)
   ProjFrontend
     初期ログイン後の画面からCreate a Projectを選択
     Project nameを入力(ProjFrontend)
@@ -31,7 +34,7 @@
     Visibility LevelをPublicに
     Create Projectボタンを押下
 
-5. gitlab-runnerの登録
+6. gitlab-runnerの登録
   ProjFrontendの場合(※ProjBackendとProjOpsも同様に行う)
     gitlab-runner-setup.shの変数を修正
       gitlabUrl, gitlabPasswordとrunnerRegistrationToken(※)を自分のものに修正
@@ -39,7 +42,7 @@
         uunnerを登録したいProject -> Setting -> CICD -> Runners(Expandをクリック) -> Specific Runnersの中
     ./gitlab-runner-setup.sh
 
-6. ソースコードを同期
+7. ソースコードを同期
   ProjFrontendの場合(※ProjBackendとProjOpsも同様に行う)
     cd /path/to/jkd201812meetup/ProjFrontend/
     git init
