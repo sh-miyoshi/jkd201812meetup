@@ -11,10 +11,15 @@
   ./install-istio.sh
 
 4. gitlabの構築
-  docker run -d -p 80:80 --name gitlab gitlab/gitlab-ce:latest
+  docker run -d -p 80:80 -p 5000:5000 --name gitlab gitlab/gitlab-ce:latest
   各Prjに外部からアクセスできるURLに変更
     docker exec -it gitlab bash
     echo "external_url 'http://<your-server-ip>'" >> /etc/gitlab/gitlab.rb
+    echo "gitlab_rails['registry_enabled'] = true" >> /etc/gitlab/gitlab.rb
+    ---TODO---
+    registry_external_url 'http://<your-server-ip>'
+    gitlab_rails['registry_enabled'] = true
+    gitlab_rails['registry_host'] = "<your-server-ip>"
     gitlab-ctl reconfigure
     exit
   ブラウザからhttp://<your-server-ip>:30000にアクセス
