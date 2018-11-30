@@ -15,10 +15,7 @@ build:
   image: docker:latest
   services:
     - name: docker:dind
-      entrypoint:
-        - dockerd-entrypoint.sh
-      command:
-        - --insecure-registry=$CI_REGISTRY
+      command: ["--insecure-registry=<your-server-ip>:5000"]
   variables:
     DOCKER_IMAGE_NAME: $CI_REGISTRY/$CI_COMMIT_REF_NAME/$APP_NAME
     DOCKER_IMAGE_VERSION: $APP_VERSION
