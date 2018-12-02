@@ -1,19 +1,38 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: <namespace>
+  name: projfrontend
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: RoleBinding
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: projbackend
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: staging
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+---
+apiVersion: v1
+kind: ServiceAccount
 metadata:
   name: gitlab-runner
-  namespace: <namespace>
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: gitlab-runner
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: admin
+  name: cluster-admin
 subjects:
 - kind: ServiceAccount
-  name: default
-  namespace: <namespace>
+  name: gitlab-runner
+  namespace: default
 ---
