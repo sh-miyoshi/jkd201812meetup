@@ -1,0 +1,162 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "<name>-runner"
+  labels:
+    app: <name>-runner
+type: Opaque
+data:
+  runner-registration-token: "<registration-token>"
+  runner-token: ""
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: <name>-runner
+  labels:
+    app: <name>-runner
+data:
+  entrypoint: |
+    #!/bin/bash
+    set -e
+
+    mkdir -p /home/gitlab-runner/.gitlab-runner/
+    cp /scripts/config.toml /home/gitlab-runner/.gitlab-runner/
+
+    # Register the runner
+    if [[ -f /secrets/s3-access-key && -f /secrets/s3-secret-key ]]; then
+      export S3_ACCESS_KEY=$(cat /secrets/s3-access-key)
+      export S3_SECRET_KEY=$(cat /secrets/s3-secret-key)
+    fi
+
+    if [[ -f /secrets/runner-registration-token ]]; then
+      export REGISTRATION_TOKEN=$(cat /secrets/runner-registration-token)
+    fi
+
+    if [[ -f /secrets/runner-token ]]; then
+      export CI_SERVER_TOKEN=$(cat /secrets/runner-token)
+    fi
+
+    /entrypoint register --non-interactive \
+
+    # Start the runner
+    /entrypoint run --user=gitlab-runner \
+      --working-directory=/home/gitlab-runner
+  config.toml: |
+    concurrent = 2
+    check_interval = 30
+    log_level = "info"
+  configure: |
+    set -e
+    cp /init-secrets/* /secrets
+---
+# Source: gitlab-runner/templates/deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: <name>-runner
+  labels:
+    app: <name>-runner
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: <name>-runner
+    spec:
+      initContainers:
+        - name: configure
+          command: ['sh', '/config/configure']
+          image: busybox:latest
+          volumeMounts:
+          - name: runner-secrets
+            mountPath: /secrets
+            readOnly: false
+          - name: scripts
+            mountPath: /config
+            readOnly: true
+          - name: init-runner-secrets
+            mountPath: /init-secrets
+            readOnly: true
+      serviceAccountName: "gitlab-runner"
+      containers:
+      - name: <name>-runner
+        image: gitlab/gitlab-runner:alpine-v11.5.0
+        lifecycle:
+          preStop:
+            exec:
+              command: ["gitlab-runner", "unregister", "--all-runners"]
+        imagePullPolicy: "IfNotPresent"
+        command: ["/bin/bash", "/scripts/entrypoint"]
+        env:
+        - name: CI_SERVER_URL
+          value: "<gitlab-url>"
+        - name: RUNNER_EXECUTOR
+          value: "kubernetes"
+        - name: REGISTER_LOCKED
+          value: "true"
+        - name: KUBERNETES_IMAGE
+          value: "ubuntu:16.04"
+        
+        - name: KUBERNETES_PRIVILEGED
+          value: "true"
+        
+        - name: KUBERNETES_NAMESPACE
+          value: "<name>"
+        livenessProbe:
+          exec:
+            command: ["/usr/bin/pgrep","gitlab.*runner"]
+          initialDelaySeconds: 60
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command: ["/usr/bin/pgrep","gitlab.*runner"]
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        ports:
+        - name: metrics
+          containerPort: 9252
+        volumeMounts:
+        - name: runner-secrets
+          mountPath: /secrets
+        - name: etc-gitlab-runner
+          mountPath: /home/gitlab-runner/.gitlab-runner
+        - name: scripts
+          mountPath: /scripts
+        - name: cacerts
+          mountPath: /etc/ssl/certs
+          readOnly: true
+        resources:
+          {}
+          
+      volumes:
+      - name: runner-secrets
+        emptyDir:
+          medium: "Memory"
+      - name: etc-gitlab-runner
+        emptyDir:
+          medium: "Memory"
+      - name: init-runner-secrets
+        projected:
+          sources:
+            - secret:
+                name: "<name>-runner"
+                items:
+                  - key: runner-registration-token
+                    path: runner-registration-token
+                  - key: runner-token
+                    path: runner-token
+      - name: scripts
+        configMap:
+          name: <name>-runner
+      - name: cacerts
+        secret:
+          secretName: gitlab-1-wildcard-tls
+---

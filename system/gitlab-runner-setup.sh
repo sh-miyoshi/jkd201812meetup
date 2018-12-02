@@ -1,6 +1,8 @@
 #!/bin/bash
 
-gitlabUrl="http:\/\/<your-server-ip>"
+gitlabUrl="http:\/\/<your-server>"
+gitlabHostname="gitlab.<your-domain>"
+gitlabIpAddress="<ipaddress>"
 gitlabUser="root"
 gitlabPassword="mysecurepassword"
 gitlabEMail="admin@example.com"
@@ -11,12 +13,12 @@ proj_ops_token=""
 
 tmp=$(mktemp)
 
+kubectl apply -f template/gitlab-user.yaml
+
 #--------------------------------------
 # ProjFrontend
 #--------------------------------------
 name="projfrontend"
-sed -e "s/<namespace>/$name/g" template/gitlab-user.yaml > $tmp
-kubectl apply -f $tmp
 kubectl create secret docker-registry gitlab \
     --docker-username="$gitlabUser" \
     --docker-password="$gitlabPassword" \
@@ -24,16 +26,19 @@ kubectl create secret docker-registry gitlab \
     --docker-server="$gitlabUrl" \
     -n $name
 
-sed "s/<gitlab-url>/$gitlabUrl/g" template/helm_values_gitlab-runner.yaml > $tmp
-sed -i "s/<registration-token>/$proj_frontend_token/g" $tmp
-helm install --name $name-runner --namespace $name -f $tmp gitlab/gitlab-runner
+sed "s/<gitlab-url>/$gitlabUrl/g" template/gitlab-runner.yaml > $tmp
+token=`echo $proj_frontend_token | tr -d '\n' | base64`
+sed -i "s/<registration-token>/$token/g" $tmp
+sed -i "s/<name>/$name/g" $tmp
+sed -i "s/<server-ip>/$gitlabIpAddress/g" $tmp
+sed -i "s/<hostname>/$gitlabHostname/g" $tmp
+
+kubectl apply -f $tmp
 
 #--------------------------------------
 # ProjBackend
 #--------------------------------------
 name="projbackend"
-sed -e "s/<namespace>/$name/g" template/gitlab-user.yaml > $tmp
-kubectl apply -f $tmp
 kubectl create secret docker-registry gitlab \
     --docker-username="$gitlabUser" \
     --docker-password="$gitlabPassword" \
@@ -41,16 +46,19 @@ kubectl create secret docker-registry gitlab \
     --docker-server="$gitlabUrl" \
     -n $name
 
-sed "s/<gitlab-url>/$gitlabUrl/g" template/helm_values_gitlab-runner.yaml > $tmp
-sed -i "s/<registration-token>/$proj_backend_token/g" $tmp
-helm install --name $name-runner --namespace $name -f $tmp gitlab/gitlab-runner
+sed "s/<gitlab-url>/$gitlabUrl/g" template/gitlab-runner.yaml > $tmp
+token=`echo $proj_backend_token | tr -d '\n' | base64`
+sed -i "s/<registration-token>/$token/g" $tmp
+sed -i "s/<name>/$name/g" $tmp
+sed -i "s/<server-ip>/$gitlabIpAddress/g" $tmp
+sed -i "s/<hostname>/$gitlabHostname/g" $tmp
+
+kubectl apply -f $tmp
 
 #--------------------------------------
 # ProjOps(staging and production)
 #--------------------------------------
 name="staging"
-sed -e "s/<namespace>/$name/g" template/gitlab-user.yaml > $tmp
-kubectl apply -f $tmp
 kubectl create secret docker-registry gitlab \
     --docker-username="$gitlabUser" \
     --docker-password="$gitlabPassword" \
@@ -59,8 +67,6 @@ kubectl create secret docker-registry gitlab \
     -n $name
 
 name="production"
-sed -e "s/<namespace>/$name/g" template/gitlab-user.yaml > $tmp
-kubectl apply -f $tmp
 kubectl create secret docker-registry gitlab \
     --docker-username="$gitlabUser" \
     --docker-password="$gitlabPassword" \
@@ -68,8 +74,13 @@ kubectl create secret docker-registry gitlab \
     --docker-server="$gitlabUrl" \
     -n $name
 
-sed "s/<gitlab-url>/$gitlabUrl/g" template/helm_values_gitlab-runner.yaml > $tmp
-sed -i "s/<registration-token>/$proj_ops_token/g" $tmp
-helm install --name projops-runner --namespace $name -f $tmp gitlab/gitlab-runner
+sed "s/<gitlab-url>/$gitlabUrl/g" template/gitlab-runner.yaml > $tmp
+token=`echo $proj_ops_token | tr -d '\n' | base64`
+sed -i "s/<registration-token>/$token/g" $tmp
+sed -i "s/<name>/$name/g" $tmp
+sed -i "s/<server-ip>/$gitlabIpAddress/g" $tmp
+sed -i "s/<hostname>/$gitlabHostname/g" $tmp
+
+kubectl apply -f $tmp
 
 rm -rf $tmp
