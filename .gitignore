@@ -1,2 +1,5 @@
 tmp/*
 system/istio-*
+ProjFrontend/config
+ProjBackend/config
+ProjOps/config

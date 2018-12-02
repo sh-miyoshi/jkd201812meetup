@@ -27,12 +27,14 @@ spec:
     spec:
       containers:
       - name: mysql-apiserver
-        image: {apiserverImageName}:{apiserverVersion}
+        image: ${apiserverImageName}:${apiserverVersion}
         env:
         - name: MYSQL_ADDR
           value: mysql.projbackend.svc.cluster.local
         ports:
           - containerPort: 4567
+      imagePullSecrets:
+      - name: gitlab
 ---
 apiVersion: v1
 kind: Service
@@ -46,7 +48,7 @@ spec:
   - name: http
     port: 4567
     targetPort: 4567
-  type: ClusterIP
+  type: LoadBalancer
   selector:
     app: mysql-apiserver
 EOF
@@ -68,12 +70,14 @@ spec:
     spec:
       containers:
       - name: mysql
-        image: {mysqlImageName}:{mysqlVersion}
+        image: ${mysqlImageName}:${mysqlVersion}
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: jkd201812
         ports:
         - containerPort: 3306
+      imagePullSecrets:
+      - name: gitlab
 ---
 apiVersion: v1
 kind: Service

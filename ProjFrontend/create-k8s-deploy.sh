@@ -1,12 +1,13 @@
 #!/bin/bash
 
-if [ $# != 2 ]; then
-  echo "Usage: $0 <imageName> <appVersion>"
+if [ $# != 3 ]; then
+  echo "Usage: $0 <imageName> <appVersion> <apiserverURL>"
   exit 1
 fi
 
 name=$1
 version=$2
+apiserverUrl=$3
 
 cat << EOF > k8s-deploy.yaml
 apiVersion: extensions/v1beta1
@@ -30,7 +31,7 @@ spec:
           - containerPort: 4567
         env:
         - name: API_SERVER_URL
-          value: mysql-apiserver.projbackend.svc.cluster.local
+          value: ${apiserverUrl}
       imagePullSecrets:
       - name: gitlab
 ---
@@ -42,13 +43,11 @@ metadata:
     app: frontend
   namespace: projfrontend
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
   - name: http
     port: 4567
     targetPort: 4567
-    nodePort: 30010
   selector:
     app: frontend
-
 EOF

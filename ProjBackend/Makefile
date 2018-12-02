@@ -1,5 +1,5 @@
 ifndef APISERVER_IMAGE_NAME
-	APISERVER_IMAGE_NAME="docker.io/smiyoshi/sectest-apiserver:latest"
+	APISERVER_IMAGE_NAME="docker.io/smiyoshi/sectest-apiserver"
 endif
 
 ifndef APISERVER_IMAGE_VERSION
@@ -7,7 +7,7 @@ ifndef APISERVER_IMAGE_VERSION
 endif
 
 ifndef MYSQL_IMAGE_NAME
-	MYSQL_IMAGE_NAME="docker.io/smiyoshi/sectest-database:latest"
+	MYSQL_IMAGE_NAME="docker.io/smiyoshi/sectest-database"
 endif
 
 ifndef MYSQL_IMAGE_VERSION
@@ -22,5 +22,5 @@ build:
 	docker build -t $(MYSQL_IMAGE_NAME):$(MYSQL_IMAGE_VERSION) --build-arg http_proxy="$(http_proxy)" --build-arg https_proxy="$(https_proxy)" -f Dockerfile.mysql .
 
 ci_push:
-	docker push $(APISERVER_IMAGE_NAME):$(APISERVER_IMAGE_NAME)
+	docker push $(APISERVER_IMAGE_NAME):$(APISERVER_IMAGE_VERSION)
 	docker push $(MYSQL_IMAGE_NAME):$(MYSQL_IMAGE_VERSION)

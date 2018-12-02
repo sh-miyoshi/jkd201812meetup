@@ -1,5 +1,19 @@
 手順メモ(※未整理)
 
+gitlab.comにアクセス
+各Projectの作成
+ruunnerを登録したいProject -> Setting -> CICD -> Runners(Expandをクリック)
+Shared Runnerの無効化、Kubernetes Clusterの追加
+GKEでClusterを追加(個数1 & n1-standard-1で問題なし、ただしOpsはn1-standard-2以上)
+Helm、GitLab Runnerをインストール
+Cluster Setup(整理中)
+  kubectl apply -f gitlab-user.yaml
+  ./gitlab-runner-setup.sh
+  kubectl apply -f gke-install-istio.yaml
+
+
+
+---オンプレインストールメモ(未完成)
 1. kubernetes clusterの作成
   略
 
@@ -44,7 +58,7 @@
     gitlab-runner-setup.shの変数を修正
       gitlabUrl, gitlabPasswordとrunnerRegistrationToken(※)を自分のものに修正
       ※runnerRegistrationTokenはGitlabのダッシュボードの以下にある
-        uunnerを登録したいProject -> Setting -> CICD -> Runners(Expandをクリック) -> Specific Runnersの中
+        ruunnerを登録したいProject -> Setting -> CICD -> Runners(Expandをクリック) -> Specific Runnersの中
     ./gitlab-runner-setup.sh
 
 7. ソースコードを同期

@@ -1,5 +1,5 @@
 ifndef DOCKER_IMAGE_NAME
-	DOCKER_IMAGE_NAME="docker.io/smiyoshi/sectest-frontend:latest"
+	DOCKER_IMAGE_NAME="docker.io/smiyoshi/sectest-frontend"
 endif
 
 ifndef DOCKER_IMAGE_VERSION
