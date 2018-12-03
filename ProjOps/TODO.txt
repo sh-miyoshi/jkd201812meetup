@@ -1,3 +1,5 @@
-fault injection
+以下の部分は未完成です
+
 canary release
-roll back
+production deploy
+    roll backなど

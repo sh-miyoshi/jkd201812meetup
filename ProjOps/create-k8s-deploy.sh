@@ -15,8 +15,6 @@ mysqlVersion=$7
 
 password="jkd201812"
 
-#TODO(gateway, virtual service of frontend)
-
 cat << EOF > k8s-deploy.yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -72,6 +70,7 @@ spec:
     metadata:
       labels:
         app: mysql-apiserver
+        version: v1
     spec:
       containers:
       - name: mysql-apiserver

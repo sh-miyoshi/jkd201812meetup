@@ -11,7 +11,6 @@ stages:
   - ops_test
   - canary_release
   - production_deploy
-  - roll_back
 
 staging_deploy:
   stage: staging_deploy
@@ -22,26 +21,58 @@ staging_deploy:
     - istioctl kube-inject -f k8s-deploy.yaml --kubeconfig=config > istio-deploy.yaml
     - kubectl apply -f istio-deploy.yaml --kubeconfig=config
     - cat k8s-deploy.yaml # for debug
+
 fault_injecting_test:
   stage: ops_test
   image: lachlanevenson/k8s-kubectl
+  when: manual
+  allow_failure: false
+  environment:
+    name: fault_injection/$CI_COMMIT_REF_NAME
+    on_stop: cleanup_fault_injecting_test
   script:
-    - echo "kubectl apply -f fault_inject.yaml"
-    - echo "waiting manual test ok"
+    - kubectl apply -f apiserver_delay.yaml --kubeconfig=config
+
+cleanup_fault_injecting_test:
+  stage: ops_test
+  image: lachlanevenson/k8s-kubectl
+  environment:
+    name: fault_injection/$CI_COMMIT_REF_NAME
+    action: stop
+  script:
+    - kubectl delete -f apiserver_delay.yaml --ignore-not-found=true --kubeconfig=config
+  when: manual
+  allow_failure: false
+
 canary_release_80_20:
   stage: canary_release
   image: lachlanevenson/k8s-kubectl
+  when: manual
+  allow_failure: false
+  environment:
+    name: canary_release/$CI_COMMIT_REF_NAME
+    on_stop: cleanup_canary_release_80_20
   script:
+    - echo "!!!!!!!!!!!TODO!!!!!!!!!!!"
     - echo "kubectl apply -f canary_frontend_80_20.yaml"
+
+cleanup_canary_release_80_20:
+  stage: canary_release
+  image: lachlanevenson/k8s-kubectl
+  environment:
+    name: canary_release/$CI_COMMIT_REF_NAME
+    action: stop
+  script:
+    - echo "!!!!!!!!!!!TODO!!!!!!!!!!!"
+    - echo "stop canary release"
+  when: manual
+  allow_failure: false
+
 production_deploy:
   stage: production_deploy
   image: smiyoshi/istioctl
   script:
+    - echo "!!!!!!!!!!!TODO!!!!!!!!!!!"
     - echo "if success to canary release, deploy to production"
     - echo "istioctl kube-inject -f ... > ..."
     - echo "kubectl apply -f ... --kubeconfig=..."
-roll_back:
-  stage: roll_back
-  image: lachlanevenson/k8s-kubectl
-  script:
-    - echo "if failed to canary release, roll back to prev version"
