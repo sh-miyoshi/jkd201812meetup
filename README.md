@@ -6,3 +6,12 @@
 
 GitlabとIstioを使ったCICD Pipelineのサンプルです
 上記のようなwebアプリで各開発チームと運用チームのGitLab CIのPipeline(.gitlab-ci.yml)の例を置いています。
+
+## 使い方
+
+installディレクトリを参考に環境を構築してください。
+(TODO)
+
+## Author
+
+Shunsuke Miyoshi
